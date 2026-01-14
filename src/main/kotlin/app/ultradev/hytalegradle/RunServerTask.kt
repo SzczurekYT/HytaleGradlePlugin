@@ -63,14 +63,11 @@ abstract class RunServerTask : DefaultTask() {
             .directory(runDirectory)
             .start()
 
-        val outThread = pump(process.inputStream, isErr = false)
-        val errThread = pump(process.errorStream, isErr = true)
-
-        val inThread = pumpStdinTo(process)
+        val outThread = pump(process.inputStream, isErr = false, process)
+        val errThread = pump(process.errorStream, isErr = true, process)
 
         try {
             val exitCode = process.waitFor()
-            inThread.interrupt()
             outThread.join(1000)
             errThread.join(1000)
             if (exitCode != 0) {
@@ -88,11 +85,22 @@ abstract class RunServerTask : DefaultTask() {
     }
 
 
-    private fun pump(stream: java.io.InputStream, isErr: Boolean): Thread {
+    private fun pump(stream: java.io.InputStream, isErr: Boolean, process: Process): Thread {
         val t = Thread {
             BufferedReader(InputStreamReader(stream)).useLines { lines ->
                 lines.forEach { line ->
                     if (isErr) logger.error(line) else logger.lifecycle(line)
+
+                    if (line.contains("Use /auth login to authenticate.")) {
+                        logger.lifecycle("Attempting to run auth login...")
+
+                        Thread {
+                            "/auth login device\n".forEach {
+                                process.outputStream.write(it.code)
+                                process.outputStream.flush()
+                            }
+                        }.start()
+                    }
                 }
             }
         }
@@ -100,30 +108,6 @@ abstract class RunServerTask : DefaultTask() {
         t.start()
         return t
     }
-
-    private fun pumpStdinTo(process: Process): Thread {
-        val t = Thread {
-            val input = System.`in`
-            val output = process.outputStream
-            val buffer = ByteArray(1024)
-
-            try {
-                while (!Thread.currentThread().isInterrupted && process.isAlive) {
-                    val read = input.read(buffer)
-                    if (read < 0) break
-                    output.write(buffer, 0, read)
-                    output.flush()
-                }
-            } catch (_: Exception) {
-            } finally {
-                try { output.close() } catch (_: Exception) {}
-            }
-        }
-        t.isDaemon = true
-        t.start()
-        return t
-    }
-
 
     private fun killProcessTree(process: Process) {
         val handle = process.toHandle()

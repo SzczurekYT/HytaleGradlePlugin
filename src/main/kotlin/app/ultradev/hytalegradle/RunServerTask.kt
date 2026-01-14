@@ -4,6 +4,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.internal.jvm.Jvm
 import java.io.BufferedReader
@@ -25,6 +26,9 @@ abstract class RunServerTask : DefaultTask() {
 
     @get:Input
     abstract val jvmArgs: ListProperty<String>
+
+    @get:Input
+    abstract val allowOp: Property<Boolean>
 
     init {
         group = "run"
@@ -51,10 +55,18 @@ abstract class RunServerTask : DefaultTask() {
 
         val javaExecutable = Jvm.current().javaExecutable
 
-        val cmd = mutableListOf(javaExecutable.absolutePath) + jvmArgs.get() + listOf(
-            "-jar", serverJar.absolutePath,
-            "--assets", assetsZip.absolutePath
+        val cmd = mutableListOf(javaExecutable.absolutePath)
+        cmd.addAll(jvmArgs.get())
+        cmd.addAll(
+            listOf(
+                "-jar", serverJar.absolutePath,
+                "--assets", assetsZip.absolutePath
+            )
         )
+
+        if (allowOp.get()) {
+            cmd.add("--allow-op")
+        }
 
         logger.lifecycle("Starting Hytale server:")
         logger.lifecycle(cmd.joinToString(" "))

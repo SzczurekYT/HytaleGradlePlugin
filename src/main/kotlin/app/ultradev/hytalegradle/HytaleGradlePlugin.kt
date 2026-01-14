@@ -14,6 +14,7 @@ class HytaleGradlePlugin : Plugin<Project> {
         val ext = project.extensions.create("hytale", HytaleExtension::class.java)
 
         ext.basePath.convention(project.layout.dir(project.provider { detectHytaleBaseDir().toFile() }))
+        ext.allowOp.convention(false)
 
         project.dependencies.add("compileOnly", project.files(File(
             ext.basePath.get().asFile,
@@ -32,6 +33,7 @@ class HytaleGradlePlugin : Plugin<Project> {
             t.runDir.set(project.layout.projectDirectory.dir("run"))
 
             t.basePath.set(ext.basePath)
+            t.allowOp.set(ext.allowOp)
         }
     }
 

@@ -1,0 +1,64 @@
+package app.ultradev.hytalegradle
+
+import org.apache.tools.ant.taskdefs.condition.Os
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.jvm.tasks.Jar
+import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.Path
+import kotlin.io.path.exists
+
+class HytaleGradlePlugin : Plugin<Project> {
+    override fun apply(project: Project) {
+        val ext = project.extensions.create("hytale", HytaleExtension::class.java)
+
+        ext.basePath.convention(project.layout.dir(project.provider { detectHytaleBaseDir().toFile() }))
+
+        project.dependencies.add("compileOnly", project.files(File(
+            ext.basePath.get().asFile,
+            "Server${File.separator}HytaleServer.jar"
+        )))
+
+        val archiveTaskName =
+            if (project.tasks.names.contains("shadowJar")) "shadowJar" else "jar"
+
+        val jarTask = project.tasks.named(archiveTaskName, Jar::class.java)
+
+        project.tasks.register("runServer", RunServerTask::class.java) { t ->
+            t.dependsOn(jarTask)
+            t.sourceJar.set(jarTask.flatMap { it.archiveFile })
+
+            t.runDir.set(project.layout.projectDirectory.dir("run"))
+
+            t.basePath.set(ext.basePath)
+        }
+    }
+
+    fun detectHytaleBaseDir(): Path {
+        val basePath = if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            val basePath = Path("${System.getenv("APPDATA")}\\Hytale\\install\\release\\package\\game\\latest")
+            if (!basePath.exists()) {
+                error("Could not find Hytale installation.")
+            }
+            basePath
+        } else if (Os.isFamily(Os.FAMILY_MAC)) {
+            val basePath = Path("${System.getProperty("user.home")}/Application Support/Hytale/install/release/package/game/latest")
+            if (!basePath.exists()) {
+                error("Could not find Hytale installation.")
+            }
+            basePath
+        } else if (Os.isFamily(Os.FAMILY_UNIX)) {
+            val basePath =
+                Path("${System.getProperty("user.home")}/.var/app/com.hypixel.HytaleLauncher/data/Hytale/install/release/package/game/latest/")
+            if (!basePath.exists()) {
+                error("Could not find Hytale installation.")
+            }
+            basePath
+        } else {
+            error("Unsupported operating system")
+        }
+
+        return basePath
+    }
+}

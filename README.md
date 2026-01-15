@@ -1,5 +1,7 @@
 # Hytale Gradle Plugin
-<img src="https://mvn.ultradev.app/api/badge/latest/snapshots/app/ultradev/HytaleGradlePlugin?color=40c14a&name=Version" />
+<a href="https://mvn.ultradev.app/#/snapshots/app/ultradev/HytaleGradlePlugin">
+  <img src="https://mvn.ultradev.app/api/badge/latest/snapshots/app/ultradev/HytaleGradlePlugin?color=40c14a&name=Version" />
+</a>
 
 ## Features
 - Automatically add local Hytale Server to classpath

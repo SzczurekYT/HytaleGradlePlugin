@@ -24,17 +24,17 @@ pluginManagement {
 Add the plugin to your `build.gradle.kts` (check the latest version in the badge below the title)
 ```kotlin
 plugins {
-    id("app.ultradev.hytalegradle") version "1.3.1"
+    id("app.ultradev.hytalegradle") version "1.4.0"
 }
 
 hytale {
     // Add `--allow-op` to server args (allows you to run `/op self` in-game)
     allowOp.set(true)
-
-    // Decompile the hytale server and attach as sources to allow browsing the code in IDEs
-    attachSources.set(true)
     
     // Set the patchline to use, currently there are "release" and "pre-release"
     patchline.set("pre-release")
 }
 ```
+
+## Browsing Hytale Source
+If you need IDE indexing of the Hytale server code, e.g. to find usages inside the server, you can generate the sources using `./gradlew generateSources`

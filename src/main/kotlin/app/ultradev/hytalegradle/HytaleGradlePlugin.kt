@@ -3,6 +3,7 @@ package app.ultradev.hytalegradle
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.jvm.tasks.Jar
 import java.io.File
 import java.nio.file.Files
@@ -50,7 +51,12 @@ class HytaleGradlePlugin : Plugin<Project> {
 
         project.tasks.register("runServer", RunServerTask::class.java) { t ->
             t.dependsOn(jarTask)
-            t.sourceJar.set(jarTask.flatMap { it.archiveFile })
+
+            val sourceSets = project.extensions.getByType(SourceSetContainer::class.java)
+            val mainSourceSet = sourceSets.getByName("main")
+
+//            val srcDirs =
+            t.sourceDir.set(mainSourceSet.resources.srcDirs.first().parentFile)
 
             t.runDir.set(project.layout.projectDirectory.dir("run"))
 

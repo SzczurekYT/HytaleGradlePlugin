@@ -14,9 +14,9 @@ import java.util.concurrent.TimeUnit
 
 abstract class RunServerTask : DefaultTask() {
 
-    @get:InputFile
+    @get:InputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val sourceJar: RegularFileProperty
+    abstract val sourceDir: DirectoryProperty
 
     @get:OutputDirectory
     abstract val runDir: DirectoryProperty
@@ -67,6 +67,9 @@ abstract class RunServerTask : DefaultTask() {
         if (allowOp.get()) {
             cmd.add("--allow-op")
         }
+
+        val resPath = sourceDir.get().asFile.absolutePath
+        cmd.add("--mods=${resPath}")
 
         logger.lifecycle("Starting Hytale server:")
         logger.lifecycle(cmd.joinToString(" "))

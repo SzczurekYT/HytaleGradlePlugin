@@ -8,7 +8,7 @@
 - `runServer` task to install your plugin and run the server
 - Generate decompiled sources to allow browsing server code in IDEs
 
-## Usage
+## Installation
 Add the repository to `settings.gradle.kts`
 ```kotlin
 pluginManagement {
@@ -34,5 +34,10 @@ hytale {
 }
 ```
 
-## Browsing Hytale Source
-If you need IDE indexing of the Hytale server code, e.g. to find usages inside the server, you can generate the sources using `./gradlew generateSources`
+## Gradle Tasks
+
+`./gradlew generateSources` generates a decompiled jar of the Hytale server sources to improve IDE indexing.
+
+`./gradlew runServer` runs the Hytale server with your plugin installed.
+
+`./gradlew installPlugin` copies your plugin jar to the server's mods folder but does not start the server, useful if you want to reload your plugin without restarting the server.

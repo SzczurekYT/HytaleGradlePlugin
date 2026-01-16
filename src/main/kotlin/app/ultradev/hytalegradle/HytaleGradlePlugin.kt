@@ -3,9 +3,9 @@ package app.ultradev.hytalegradle
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.Delete
 import org.gradle.jvm.tasks.Jar
 import java.io.File
-import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.exists
@@ -20,11 +20,13 @@ class HytaleGradlePlugin : Plugin<Project> {
         }))
         ext.allowOp.convention(false)
         ext.attachSources.convention(false)
+        ext.runDirectory.convention(project.layout.projectDirectory.dir("run"))
 
         project.afterEvaluate {
             if (ext.attachSources.get()) {
                 val cacheDir = project.layout.buildDirectory.dir("hytale").get().asFile.toPath()
-                val localRepo = GenerateSources.generateSources(project.logger, cacheDir, ext.basePath.get().asFile.toPath())
+                val localRepo =
+                    GenerateSources.generateSources(project.logger, cacheDir, ext.basePath.get().asFile.toPath())
                 project.repositories.flatDir {
                     it.name = "hytaleGenerated"
                     it.dir(localRepo)
@@ -43,6 +45,10 @@ class HytaleGradlePlugin : Plugin<Project> {
             }
         }
 
+        project.tasks.named("clean", Delete::class.java) {
+            it.delete(ext.runDirectory)
+        }
+
         val archiveTaskName =
             if (project.tasks.names.contains("shadowJar")) "shadowJar" else "jar"
 
@@ -52,7 +58,7 @@ class HytaleGradlePlugin : Plugin<Project> {
             t.dependsOn(jarTask)
             t.sourceJar.set(jarTask.flatMap { it.archiveFile })
 
-            t.runDir.set(project.layout.projectDirectory.dir("run"))
+            t.runDir.set(ext.runDirectory)
 
             t.basePath.set(ext.basePath)
             t.allowOp.set(ext.allowOp)
@@ -67,7 +73,8 @@ class HytaleGradlePlugin : Plugin<Project> {
             }
             basePath
         } else if (Os.isFamily(Os.FAMILY_MAC)) {
-            val basePath = Path("${System.getProperty("user.home")}/Application Support/Hytale/install/$patchline/package/game/latest")
+            val basePath =
+                Path("${System.getProperty("user.home")}/Application Support/Hytale/install/$patchline/package/game/latest")
             if (!basePath.exists()) {
                 error("Could not find Hytale installation.")
             }
